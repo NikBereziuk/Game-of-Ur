@@ -45,6 +45,6 @@ func move(st *state) {
 
 	}
 
-	// tossRes := 3 //tmp
+	// tossRes := 3 //tmp/
 
 }
