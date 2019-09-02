@@ -3,7 +3,7 @@ package main
 type coord string
 
 type square struct {
-	isOccup   bool
+	piece     piece
 	isRosette bool
 	isWarzone bool
 	isFinish  bool
@@ -28,8 +28,6 @@ func instantiateBoard() board {
 			isRosette: true,
 		}
 		b["A8"] = square{}
-		
-		
 
 		b["B1"] = square{
 			isWarzone: true,
@@ -56,7 +54,7 @@ func instantiateBoard() board {
 		b["B8"] = square{
 			isWarzone: true,
 		}
-		
+
 		b["C1"] = square{
 			isRosette: true,
 		}
@@ -68,7 +66,7 @@ func instantiateBoard() board {
 		}
 		b["C7"] = square{
 			isRosette: true,
-		}		
+		}
 		b["C8"] = square{}
 	}
 

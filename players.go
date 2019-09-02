@@ -3,12 +3,13 @@ package main
 type player struct {
 	alliance int
 	name     string
-	path []coord
+	path     []coord
 }
 
 type piece struct {
 	id        int
 	alliance  player
+	coord     coord
 	endedGame bool
 }
 
@@ -16,7 +17,7 @@ func instantiatePlayer(a int, n string) (player, [7]piece) {
 	p := player{
 		alliance: a,
 		name:     n,
-		path: getPass(a),
+		path:     getPass(a),
 	}
 
 	var pc [7]piece

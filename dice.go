@@ -7,7 +7,8 @@ import (
 
 type dice [4]int
 
-func (d dice) roll() dice {
+func rollDice() dice {
+	var d dice
 
 	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	result := rand.Intn(9999)
