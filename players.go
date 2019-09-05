@@ -2,6 +2,7 @@ package main
 
 type piece struct {
 	id        int
+	alliance  int
 	coord     coord
 	endedGame bool
 }
@@ -23,7 +24,8 @@ func instantiatePlayer(a int, n string) player {
 	var pc [7]piece
 	for i := 0; i < len(pc); i++ {
 		pc[i] = piece{
-			id: i + 1,
+			id:       i + 1,
+			alliance: p.alliance,
 		}
 	}
 	p.pieces = pc
@@ -47,9 +49,9 @@ func nextPlayer(currPlayerIdx int, arr []player) int {
 		if v.alliance == currPlayerIdx {
 			if i == len(arr)-1 {
 				return arr[0].alliance
-			} 
+			}
 			return arr[i+1].alliance
-		} 
+		}
 	}
 	return -1
 }
