@@ -9,6 +9,8 @@ import (
 )
 
 type state struct {
+	players    []player
+	board      board
 	currPlayer int
 	gameOver   bool
 }
@@ -24,13 +26,14 @@ func main() {
 	// b := instantiateBoard()
 	// fmt.Println(b)
 
-	// p1, pc1 := instantiatePlayer(1, "Nik")
-	// fmt.Println(p1)
-	// fmt.Println(pc1)
+	players := make([]player, 0) //slice of players
+	players = append(players, instantiatePlayer(1, "Nik"), instantiatePlayer(2, "Olmer"))
+	state.players = players
+	fmt.Println(players)
 
 	for state.gameOver == false {
 		move(&state)
-		fmt.Println("Move ended")
+		fmt.Println("Move ended. Next player:", state.currPlayer)
 	}
 }
 
@@ -39,7 +42,12 @@ func move(st *state) {
 	// throw dice
 	diceRes := rollDice()
 	fmt.Println("Dice roll result:", diceRes)
-	//TODO: end move if dice toss result = 0
+	toss := diceRes.tossSum()
+	//end move if dice toss result = 0
+	if toss == 0 {
+		(*st).currPlayer = nextPlayer((*st).currPlayer, (*st).players)
+		return
+	}
 
 	//TODO: calculate potential moves
 
@@ -50,6 +58,15 @@ func move(st *state) {
 	if piece == 999 { //tmp: force exit
 		fmt.Println("force exit")
 		(*st).gameOver = true
+	}
+
+	/* End of move: switch players.
+	Exceptions:
+	1) Piece was moved on a rosette
+	2) Toss result: 4
+	*/
+	if toss != 4 {
+		(*st).currPlayer = nextPlayer((*st).currPlayer, (*st).players)
 	}
 
 }

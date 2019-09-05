@@ -25,3 +25,11 @@ func rollDice() dice {
 
 	return d
 }
+
+func (d dice) tossSum() int {
+	sum := 0
+	for i := 0; i < len(d); i++ {
+		sum = sum + d[i]
+	}
+	return sum
+}

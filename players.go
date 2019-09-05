@@ -1,19 +1,19 @@
 package main
 
-type player struct {
-	alliance int
-	name     string
-	path     []coord
-}
-
 type piece struct {
 	id        int
-	alliance  player
 	coord     coord
 	endedGame bool
 }
 
-func instantiatePlayer(a int, n string) (player, [7]piece) {
+type player struct {
+	alliance int
+	name     string
+	path     []coord
+	pieces   [7]piece
+}
+
+func instantiatePlayer(a int, n string) player {
 	p := player{
 		alliance: a,
 		name:     n,
@@ -23,12 +23,12 @@ func instantiatePlayer(a int, n string) (player, [7]piece) {
 	var pc [7]piece
 	for i := 0; i < len(pc); i++ {
 		pc[i] = piece{
-			id:       i + 1,
-			alliance: p,
+			id: i + 1,
 		}
 	}
+	p.pieces = pc
 
-	return p, pc
+	return p
 }
 
 func getPass(a int) []coord {
@@ -40,4 +40,16 @@ func getPass(a int) []coord {
 		p = append(p, "C4", "C3", "C2", "C1", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "C8", "C7", "C6")
 	}
 	return p
+}
+
+func nextPlayer(currPlayerIdx int, arr []player) int {
+	for i, v := range arr {
+		if v.alliance == currPlayerIdx {
+			if i == len(arr)-1 {
+				return arr[0].alliance
+			} 
+			return arr[i+1].alliance
+		} 
+	}
+	return -1
 }
