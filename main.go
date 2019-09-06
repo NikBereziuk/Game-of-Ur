@@ -1,11 +1,8 @@
 package main
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
 	"os"
-	"strconv"
 )
 
 type state struct {
@@ -15,31 +12,24 @@ type state struct {
 	gameOver   bool
 }
 
-type possibleMovesValues struct {
-	destCoord coord
-	errMsg    string
-}
-
-type possibleMoves map[piece]possibleMovesValues
-
 func main() {
 
 	state := state{
 		currPlayer: 1,
 	}
 
-	fmt.Println("Test begin")
+	fmt.Println("Game started.")
 
 	state.board = instantiateBoard()
 
 	players := make([]player, 0) //slice of players
 	players = append(players, instantiatePlayer(1, "Nik"), instantiatePlayer(2, "Olmer"))
 	state.players = players
-	fmt.Println(players)
 
 	for state.gameOver == false {
 		move(&state)
 		fmt.Println("Move ended. Next player:", state.players[state.currPlayer-1].name)
+		fmt.Println("Board state:", state.board)
 	}
 }
 
@@ -55,17 +45,35 @@ func move(st *state) {
 		return
 	}
 
-	possibleMoves := precalcMoves(toss, st)
-	fmt.Println("Possible moves", "%+v\n", possibleMoves)
+	// precalculate moves concurrently, via channel
+	precalc := make(chan possibleMoves)
+	go precalcMoves(toss, st, precalc)
 
-	pieceID, pieceErr := pickPiece()
-	if pieceErr != nil {
-		fmt.Println(pieceErr)
-	}
-	if pieceID == 999 { //tmp: force exit
-		fmt.Println("force exit")
-		(*st).gameOver = true
-		os.Exit(999)
+	isViableMove := false
+	for isViableMove == false {
+		pieceID, pieceErr := pickPiece()
+		if pieceErr != nil {
+			fmt.Println(pieceErr)
+			os.Exit(888)
+		}
+		if pieceID == 999 { //tmp: force exit
+			fmt.Println("force exit")
+			(*st).gameOver = true
+			os.Exit(999)
+		}
+
+		possibleMoves := <-precalc
+		fmt.Printf("%+v", possibleMoves)
+
+		//check if the picked piece can actually move
+		pickedPiece := (*st).players[(*st).currPlayer-1].pieces[pieceID-1]
+		for key, val := range possibleMoves {
+			if key == pickedPiece && val.errMsg == "" {
+				movePiece(pickedPiece, val.destCoord, st)
+				isViableMove = true
+				break
+			}
+		}
 	}
 
 	/* End of move: switch players.
@@ -76,59 +84,4 @@ func move(st *state) {
 	if toss != 4 {
 		(*st).currPlayer = nextPlayer((*st).currPlayer, (*st).players)
 	}
-
-}
-
-func pickPiece() (int, error) {
-	// ask player to pick a piece
-	fmt.Print("Enter piece ID (int 1 - 7): -> ")
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() == true {
-		ans := scanner.Text()
-		pID, err := strconv.Atoi(ans)
-		if err == nil && ((pID > 0 && pID <= 7) || pID == 999) {
-			return pID, nil
-		} else if err == nil && (pID < 0 || pID > 7) {
-			fmt.Println("Piece ID is out of bounds. Try again")
-		} else if err != nil {
-			fmt.Println("Not an integer. Try again")
-		}
-		fmt.Print("Enter piece ID (int 1 - 7): -> ")
-	}
-	return 0, errors.New("scanner.Scan failed")
-}
-
-func precalcMoves(t int, st *state) (pm possibleMoves) {
-	pmMap := make(possibleMoves)
-
-	//get path:
-	path := (*st).players[(*st).currPlayer-1].path
-
-	//loop through pieces:
-	for _, pc := range (*st).players[(*st).currPlayer-1].pieces {
-		newPathArrIdx := 0
-		//Step 1. Get destination square
-		if pc.coord == "" {
-			newPathArrIdx = t - 1
-		} else {
-			for i, val := range path {
-				if val == pc.coord {
-					newPathArrIdx = i + t
-				}
-			}
-		}
-		if newPathArrIdx > len(path)-1 {
-			pmMap[pc] = possibleMovesValues{errMsg: "You can't move this piece that far"}
-			continue
-		}
-		newCoord := path[newPathArrIdx]
-		//Step 2. See if the destination square is not occupied
-		square := (*st).board[newCoord]
-		if square.piece.id != 0 && square.piece.alliance == (*st).currPlayer {
-			pmMap[pc] = possibleMovesValues{destCoord: newCoord, errMsg: "Destination square is occupied by your piece"}
-		} else if (square.isWarzone == true && square.piece.alliance != (*st).currPlayer) || square.piece.id == 0 {
-			pmMap[pc] = possibleMovesValues{destCoord: newCoord}
-		}
-	}
-	return pmMap
 }

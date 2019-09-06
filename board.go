@@ -14,7 +14,7 @@ type board map[coord]square
 func instantiateBoard() board {
 	b := make(map[coord]square)
 
-	{ //Populate square settings
+	 //Populate square settings
 		b["A1"] = square{
 			isRosette: true,
 		}
@@ -68,7 +68,7 @@ func instantiateBoard() board {
 			isRosette: true,
 		}
 		b["C8"] = square{}
-	}
+	
 
 	return b
 }
